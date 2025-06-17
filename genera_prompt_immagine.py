@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import random
 import os
-import OpenAI
+import openAI
 from PIL import Image
 from io import BytesIO
 import pytesseract
