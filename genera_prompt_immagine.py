@@ -6,6 +6,7 @@ from openai import OpenAI
 from PIL import Image
 from io import BytesIO
 import pytesseract
+import re
 
 # ========== CONFIGURAZIONE ==========
 URL = "https://www.awakenedsoul.ch/shop"
@@ -14,6 +15,10 @@ openai_api_key = os.getenv("OPENAI_API_KEY")
 webhook_url = "https://hooks.zapier.com/hooks/catch/23181653/2vr280p/"
 sito_web = "www.awakenedsoul.ch"
 
+# Controllo presenza chiave API
+if not openai_api_key:
+    raise ValueError("❌ OPENAI_API_KEY non è impostata. Assicurati che sia presente nelle variabili d'ambiente.")
+
 client = OpenAI(api_key=openai_api_key)
 
 # ========== SCARICA IMMAGINI DA PIÙ PAGINE ==========
@@ -21,7 +26,13 @@ all_images = []
 
 for page_num in range(1, 9):  # Pagine da 1 a 8
     paged_url = f"{URL}?page={page_num}"
-    response = requests.get(paged_url, headers=headers)
+    try:
+        response = requests.get(paged_url, headers=headers)
+        response.raise_for_status()
+    except Exception as e:
+        print(f"⚠️ Errore nel caricamento della pagina {page_num}: {e}")
+        continue
+
     soup = BeautifulSoup(response.text, 'html.parser')
     images = soup.find_all('img')
     for img in images:
@@ -36,14 +47,16 @@ os.makedirs("immagini_prodotto", exist_ok=True)
 for img_url in all_images:
     try:
         res = requests.get(img_url)
+        res.raise_for_status()
         img = Image.open(BytesIO(res.content))
         width, height = img.size
         aspect_ratio = width / height
 
-        # Instagram ideale: verticale o quadrata (escludi banner larghi)
+        # Instagram ideale: verticale o quadrata
         if 0.8 <= aspect_ratio <= 1.2 and height >= 600:
             filtered_images.append((img_url, img))
-    except Exception:
+    except Exception as e:
+        print(f"⚠️ Errore nel processamento immagine: {e}")
         continue
 
 if not filtered_images:
@@ -61,11 +74,15 @@ print(f"✅ Immagine salvata come '{filepath}'")
 
 # ========== ESTRATTO TESTO DALL'IMMAGINE ==========
 try:
-    testo_estratto = pytesseract.image_to_string(selected_img, lang='ita')
+    raw_text = pytesseract.image_to_string(selected_img, lang='ita')
+    testo_estratto = re.sub(r'[^a-zA-Z0-9àèéìòùÀÈÉÌÒÙ\s.,!?\'"]+', ' ', raw_text)
+    testo_estratto = re.sub(r'\s+', ' ', testo_estratto).strip()
+    if not testo_estratto:
+        testo_estratto = "No readable text found on image"
     print("🔍 Testo estratto dall'immagine:", testo_estratto)
 except Exception as e:
     print(f"⚠️ Errore OCR: {e}")
-    testo_estratto = ""
+    testo_estratto = "No readable text found on image"
 
 # ========== GENERA CAPTION CON GPT ==========
 prompt = (
@@ -86,6 +103,8 @@ try:
         max_tokens=150
     )
     caption = response.choices[0].message.content.strip()
+    if len(caption) > 250:
+        caption = caption[:247] + "..."
 except Exception as e:
     caption = (
         "🌿 Embrace growth and self-awareness through conscious fashion. Every design carries a message to uplift your spirit. "
@@ -95,7 +114,7 @@ except Exception as e:
 
 # ========== INVIA A ZAPIER ==========
 print("\n📌 Caption per Instagram:")
-print("="*50)
+print("=" * 50)
 print(caption)
 
 data = {
@@ -104,8 +123,9 @@ data = {
     "prompt": prompt
 }
 
-zap_response = requests.post(webhook_url, json=data)
-if zap_response.status_code == 200:
+try:
+    zap_response = requests.post(webhook_url, json=data)
+    zap_response.raise_for_status()
     print("✅ Dati inviati con successo a Zapier!")
-else:
-    print(f"❌ Errore nell'invio dei dati a Zapier: {zap_response.status_code}")
+except Exception as e:
+    print(f"❌ Errore nell'invio dei dati a Zapier: {e}")
