@@ -83,7 +83,7 @@ try:
         temperature=0.9,
         max_tokens=150
     )
-    caption = response.choices[0].message["content"].strip()
+    caption = response['choices'][0]['message']['content'].strip()
 except Exception as e:
     caption = (
         "🌿 Embrace growth and self-awareness through conscious fashion. Every design carries a message to uplift your spirit. "
