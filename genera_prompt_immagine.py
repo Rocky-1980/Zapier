@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import random
 import os
-import openai
+from openai import OpenAI
 from PIL import Image
 from io import BytesIO
 import pytesseract
@@ -10,9 +10,11 @@ import pytesseract
 # ========== CONFIGURAZIONE ==========
 URL = "https://www.awakenedsoul.ch/shop"
 headers = {'User-Agent': 'Mozilla/5.0'}
-openai.api_key = os.getenv("OPENAI_API_KEY")
+openai_api_key = os.getenv("OPENAI_API_KEY")
 webhook_url = "https://hooks.zapier.com/hooks/catch/23181653/2vr280p/"
 sito_web = "www.awakenedsoul.ch"
+
+client = OpenAI(api_key=openai_api_key)
 
 # ========== SCARICA IMMAGINI DA PIÙ PAGINE ==========
 all_images = []
@@ -44,37 +46,40 @@ for img_url in all_images:
     except Exception:
         continue
 
-if not filtered_images:
-    print("⚠️ Nessuna immagine adatta trovata.")
-    exit()
+# ========== GESTIONE FALLBACK IMMAGINE ==========
+if filtered_images:
+    img_url, selected_img = random.choice(filtered_images)
+    print("📷 Immagine originale:", img_url)
 
-# ========== SELEZIONA IMMAGINE CASUALE ==========
-img_url, selected_img = random.choice(filtered_images)
-print("📷 Immagine originale:", img_url)
+    filename = img_url.split("/")[-1]
+    filepath = f"immagini_prodotto/{filename}"
+    selected_img.save(filepath)
+    print(f"✅ Immagine salvata come '{filepath}'")
 
-filename = img_url.split("/")[-1]
-filepath = f"immagini_prodotto/{filename}"
-selected_img.save(filepath)
-print(f"✅ Immagine salvata come '{filepath}'")
+    # OCR
+    try:
+        testo_estratto = pytesseract.image_to_string(selected_img, lang='ita')
+        print("🔍 Testo estratto dall'immagine:", testo_estratto)
+    except Exception as e:
+        print(f"⚠️ Errore OCR: {e}")
+        testo_estratto = ""
 
-# ========== ESTRATTO TESTO DALL'IMMAGINE ==========
-try:
-    testo_estratto = pytesseract.image_to_string(selected_img, lang='ita')
-    print("🔍 Testo estratto dall'immagine:", testo_estratto)
-except Exception as e:
-    print(f"⚠️ Errore OCR: {e}")
+else:
+    # Immagine fallback (metti un URL reale di immagine online o del tuo sito)
+    img_url = "https://static.wixstatic.com/media/d88eeb_d5cec62a575b45a7880d8156a00fbfda~mv2.jpg/v1/fill/w_625,h_625,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/d88eeb_d5cec62a575b45a7880d8156a00fbfda~mv2.jpg"
     testo_estratto = ""
+    print("⚠️ Nessuna immagine adatta trovata, uso immagine fallback:", img_url)
 
 # ========== GENERA CAPTION CON GPT ==========
 prompt = (
-    f"You are a social media copywriter for a conscious fashion brand. "
+    f"You are a creative social media copywriter for a conscious fashion brand. "
     f"Generate a creative Instagram caption in English (max 250 characters) using this text found on a product image: \"{testo_estratto}\". "
-    f"The brand promotes spiritual and mindset messages such as vulnerability, self-worth, integrity, presence, and boundaries. "
+    f"The brand promotes spiritual and mindset messages such as vulnerability, self-worth, integrity, brotherhood, humble, presence, and boundaries. "
     f"Include emojis, a warm inspiring tone, and a call to action inviting followers to visit {sito_web}."
 )
 
 try:
-    response = openai.ChatCompletion.create(
+    response = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
             {"role": "system", "content": "You write inspiring Instagram captions for a spiritual clothing brand."},
@@ -83,7 +88,7 @@ try:
         temperature=0.9,
         max_tokens=150
     )
-    caption = response['choices'][0]['message']['content'].strip()
+    caption = response.choices[0].message.content.strip()
 except Exception as e:
     caption = (
         "🌿 Embrace growth and self-awareness through conscious fashion. Every design carries a message to uplift your spirit. "
