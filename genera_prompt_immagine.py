@@ -10,16 +10,14 @@ import pytesseract
 # ========== CONFIGURAZIONE ==========
 URL = "https://www.awakenedsoul.ch/shop"
 headers = {'User-Agent': 'Mozilla/5.0'}
-openai_api_key = os.getenv("OPENAI_API_KEY")
+openai.api_key = os.getenv("OPENAI_API_KEY")
 webhook_url = "https://hooks.zapier.com/hooks/catch/23181653/2vr280p/"
 sito_web = "www.awakenedsoul.ch"
-
-openai.api_key = openai_api_key
 
 # ========== SCARICA IMMAGINI DA PIÙ PAGINE ==========
 all_images = []
 
-for page_num in range(1, 9):  # Pagine da 1 a 8
+for page_num in range(1, 9):  # Scansiona 8 pagine
     paged_url = f"{URL}?page={page_num}"
     response = requests.get(paged_url, headers=headers)
     soup = BeautifulSoup(response.text, 'html.parser')
@@ -39,8 +37,6 @@ for img_url in all_images:
         img = Image.open(BytesIO(res.content))
         width, height = img.size
         aspect_ratio = width / height
-
-        # Instagram ideale: verticale o quadrata (escludi banner larghi)
         if 0.8 <= aspect_ratio <= 1.2 and height >= 600:
             filtered_images.append((img_url, img))
     except Exception:
@@ -50,22 +46,17 @@ for img_url in all_images:
 if filtered_images:
     img_url, selected_img = random.choice(filtered_images)
     print("📷 Immagine originale:", img_url)
-
     filename = img_url.split("/")[-1]
     filepath = f"immagini_prodotto/{filename}"
     selected_img.save(filepath)
     print(f"✅ Immagine salvata come '{filepath}'")
-
-    # OCR
     try:
         testo_estratto = pytesseract.image_to_string(selected_img, lang='ita')
         print("🔍 Testo estratto dall'immagine:", testo_estratto)
     except Exception as e:
         print(f"⚠️ Errore OCR: {e}")
         testo_estratto = ""
-
 else:
-    # Immagine fallback (metti un URL reale di immagine online o del tuo sito)
     img_url = "https://static.wixstatic.com/media/d88eeb_d5cec62a575b45a7880d8156a00fbfda~mv2.jpg/v1/fill/w_625,h_625,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/d88eeb_d5cec62a575b45a7880d8156a00fbfda~mv2.jpg"
     testo_estratto = ""
     print("⚠️ Nessuna immagine adatta trovata, uso immagine fallback:", img_url)
