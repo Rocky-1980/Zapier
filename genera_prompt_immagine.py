@@ -14,7 +14,7 @@ openai_api_key = os.getenv("OPENAI_API_KEY")
 webhook_url = "https://hooks.zapier.com/hooks/catch/23181653/2vr280p/"
 sito_web = "www.awakenedsoul.ch"
 
-client = OpenAI(api_key=openai_api_key)
+openai.api_key = openai_api_key
 
 # ========== SCARICA IMMAGINI DA PIÙ PAGINE ==========
 all_images = []
