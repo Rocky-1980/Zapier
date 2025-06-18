@@ -2,12 +2,10 @@ import requests
 from bs4 import BeautifulSoup
 import random
 import os
-import pytesseract
+import openai
 from PIL import Image
 from io import BytesIO
-import openai
 
-# ========== CONFIGURAZIONE ==========
 print("🚀 Avvio script Instagram Post Generator")
 
 BASE_URL = "https://www.awakenedsoul.ch/shop"
@@ -47,7 +45,7 @@ for img_url in product_images:
         width, height = img.size
         aspect_ratio = width / height
         if aspect_ratio <= 1.3 and height >= 600:
-            filtered_images.append((img_url, img_data))
+            filtered_images.append(img_url)
     except Exception:
         continue
 
@@ -55,37 +53,28 @@ print(f"✅ Immagini filtrate per Instagram: {len(filtered_images)}")
 
 # ========== SELEZIONE IMMAGINE ==========
 if filtered_images:
-    img_url, selected_data = random.choice(filtered_images)
+    img_url = random.choice(filtered_images)
     print("📷 Immagine selezionata:", img_url)
-    try:
-        img = Image.open(BytesIO(selected_data))
-        extracted_text = pytesseract.image_to_string(img)
-        print("📄 Testo OCR:", extracted_text.strip())
-    except Exception as e:
-        print(f"⚠️ Errore OCR migliorato: {e}")
-        extracted_text = ""
 else:
-    img_url = "https://static.wixstatic.com/media/d88eeb_d5cec62a575b45a7880d8156a00fbfda~mv2.jpg"
-    print("⚠️ Nessuna immagine valida trovata. Uso fallback:", img_url)
-    extracted_text = ""
+    print("⚠️ Nessuna immagine valida trovata. Non invio nulla a Zapier.")
+    exit(0)
 
-# ========== PROMPT E CAPTION ==========
+# ========== PROMPT E CAPTION GPT-4o ==========
 prompt = (
-    f"You are a creative social media copywriter for a conscious fashion brand. "
-    f"Generate a creative Instagram caption in English (max 250 characters) using this text found on a product image: \"{testo_estratto}\". "
-    f"The brand promotes spiritual and mindset messages such as self-esteem, brotherhood and sisterhood, integrity, mindfulness, acceptance, presence, and boundaries. "
-    f"Include emojis, a warm and inspiring tone that invites people to work on their mindset to become better human beings, and a call to action inviting followers to visit {sito_web}."
-	)
-
+    "You are an Instagram caption copywriter for a spiritual fashion brand. "
+    "Write a unique, creative, and inspiring Instagram caption (max 250 characters) for a product photo. "
+    "Themes to mention: vulnerability, self-worth, integrity, brotherhood, presence, boundaries. "
+    "Vary style and tone, use relevant emojis, and always invite followers to visit www.awakenedsoul.ch."
+)
 
 try:
     response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4o",
         messages=[
-            {"role": "system", "content": "You are an Instagram caption copywriter for a spiritual clothing brand."},
+            {"role": "system", "content": "You are an Instagram caption copywriter for a spiritual clothing brand. Every caption should be fresh and not repetitive."},
             {"role": "user", "content": prompt}
         ],
-        temperature=0.9,
+        temperature=1.0,    # Più alta = caption più varie e creative
         max_tokens=150
     )
     caption = response.choices[0].message.content.strip()
