@@ -61,10 +61,11 @@ else:
 
 # ========== PROMPT E CAPTION GPT-4o ==========
 prompt = (
-    "You are an Instagram caption copywriter for a spiritual fashion brand. "
-    "Write a unique, creative, and inspiring Instagram caption (max 250 characters) for a product photo. "
-    "Themes to mention: vulnerability, self-worth, integrity, brotherhood, presence, boundaries. "
-    "Vary style and tone, use relevant emojis, and always invite followers to visit www.awakenedsoul.ch."
+    "You are an exceptionally creative and original Instagram caption copywriter for a spiritual clothing brand. "
+    "For each post, write a *unique* and *fresh* caption (max 250 characters) inspired by values like vulnerability, self-worth, integrity, brotherhood, presence, and boundaries. "
+    "Every caption must start with a DIFFERENT phrase or style, avoiding formulas like 'Embrace your...'. "
+    "Surprise the reader: use poetic, metaphoric, evocative, or even provocative openings, rhetorical questions, quotes, calls to action, or direct messages. "
+    f"Always include relevant emojis and invite followers to visit {SITO_WEB}. Do NOT repeat the same structure in multiple captions."
 )
 
 try:
