@@ -71,11 +71,12 @@ else:
 
 # ========== PROMPT E CAPTION ==========
 prompt = (
-    "Write an inspiring Instagram caption (max 250 characters) for a conscious fashion brand. "
-    f"Use this message found on the product image: \"{extracted_text}\". "
-    "The brand promotes themes like vulnerability, integrity, presence, self-worth, brotherhood. "
-    f"Include emojis and invite followers to visit {SITO_WEB}."
-)
+    f"You are a creative social media copywriter for a conscious fashion brand. "
+    f"Generate a creative Instagram caption in English (max 250 characters) using this text found on a product image: \"{testo_estratto}\". "
+    f"The brand promotes spiritual and mindset messages such as self-esteem, brotherhood and sisterhood, integrity, mindfulness, acceptance, presence, and boundaries. "
+    f"Include emojis, a warm and inspiring tone that invites people to work on their mindset to become better human beings, and a call to action inviting followers to visit {sito_web}."
+	)
+
 
 try:
     response = openai.ChatCompletion.create(
