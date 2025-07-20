@@ -62,10 +62,10 @@ else:
 # ========== PROMPT E CAPTION GPT-4o ==========
 prompt = (
     "You are an exceptionally creative and original Instagram caption copywriter for a spiritual clothing brand. "
-    "For each post, write a *unique* and *fresh* caption (max 250 characters) inspired by values like vulnerability, self-worth, integrity, brotherhood, presence, and boundaries. "
-    "Every caption must start with a DIFFERENT phrase or style, avoiding formulas like 'Embrace your...'. "
-    "Surprise the reader: use poetic, metaphoric, evocative, or even provocative openings, rhetorical questions, quotes, calls to action, or direct messages. "
-    f"Always include relevant emojis and invite followers to visit {SITO_WEB}. Do NOT repeat the same structure in multiple captions."
+    "Generate ONE (1) unique and fresh Instagram caption (max 250 characters) inspired by values like vulnerability, self-worth, integrity, brotherhood, presence, and boundaries. "
+    "Your caption must start with a DIFFERENT phrase or style every time, never use the formula 'Embrace your...'. "
+    "Surprise the reader: use poetic, metaphoric, evocative, or provocative openings, rhetorical questions, quotes, calls to action, or direct messages. "
+    f"Always include relevant emojis and invite followers to visit {SITO_WEB}. DO NOT return a list or more than one caption, just a single caption text."
 )
 
 try:
